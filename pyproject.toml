@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "flaskbackend"
+version = "0.1.0"
+description = "The backend for our Knee Rehabilitation Web App and Mobile App"
+authors = ["Cole Rottenberg <cole.rottenberg@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+Flask = "^3.0.3"
+pandas = "^2.2.2"
+influxdb3-python = "^0.8.0"
+python-dotenv = "^1.0.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.2"
+mkdocs = "^1.6.1"
+black = "^24.8.0"
+
+[tool.poetry.scripts]
+flaskbackend = "flaskbackend:app"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
