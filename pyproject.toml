@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "flaskbackend"
-version = "0.1.0"
+version = "0.2.0"
 description = "The backend for our Knee Rehabilitation Web App and Mobile App"
 authors = ["Cole Rottenberg <cole.rottenberg@gmail.com>"]
 readme = "README.md"
