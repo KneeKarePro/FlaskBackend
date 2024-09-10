@@ -28,13 +28,11 @@ Our **InfluxDB** database credentials are stored within the following variables:
 - INFLUXDB_URL=XXX
 - INFLUXDB_TOKEN=XXX
 - INFLUXDB_ORG=XXX
-- INFLUXDB_BUCKET=XXX
 
 It is recommended the environment variables be stored within some environment variable management system like a `.env` file which will be loaded by the backend anyways. The format for the `.env` file looks as such:
 ```
 INFLUXDB_URL=http://localhost:8086
 INFLUXDB_TOKEN=my-token
 INFLUXDB_ORG=my-org
-INFLUXDB_BUCKET=my-bucket
 ```
 The values are example values and need to be adjusted to match the production or development configuration

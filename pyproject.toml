@@ -9,8 +9,8 @@ readme = "README.md"
 python = "^3.12"
 Flask = "^3.0.3"
 pandas = "^2.2.2"
-influxdb3-python = "^0.8.0"
 python-dotenv = "^1.0.1"
+influxdb-client = "^1.45.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
