@@ -13,6 +13,24 @@ The project use the Flask framework for settings up backend API Routes for both 
 ### Flask
 
 ### InfluxDB
+InfluxDB is a time series database that is used to store our user's data. The data is stored in a bucket that is unique to each user. The data is stored in the following format:
+```
+measurement: knee_data
+tags: user_id
+fields: x, y, z, timestamp
+```
+The data is stored in the following format to allow for easy querying and processing of the data. The data is stored in a time series format to allow for easy querying of the data.
+
+First install the InfluxDB database and then install the Influx CLI. The Influx CLI is used to create the database and the bucket for the data. The following commands are used to create the database and the bucket:
+```
+influx setup \
+  --force \
+  --username my-user \
+  --password my-password \
+  --org my-org \
+  --bucket my-bucket \
+  --retention 1w
+```
 
 ---
 
