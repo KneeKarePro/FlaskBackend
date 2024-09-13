@@ -63,8 +63,6 @@ async def write_data_to_influxdb_async(data: pd.DataFrame, client: InfluxDBClien
             .time(datetime.now(), WritePrecision.NS)
         write_api.write(bucket=bucket, record=point)
 
-def main():
-    app.run(debug=True)
 
 @app.route("/write_data", methods=["POST"])
 def write_data():
@@ -104,5 +102,9 @@ def get_data(username):
         for record in table.records:
             data.append(record.values)
     return jsonify(data)
+
+def main():
+    app.run(debug=True)
+
 if __name__ == "__main__":
     main()
