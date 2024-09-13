@@ -4,6 +4,7 @@ from influxdb_client import InfluxDBClient, Point, WritePrecision
 from flask import Flask, request, jsonify
 import pandas as pd
 from dotenv import load_dotenv
+import asyncio
 
 from datetime import datetime
 import os
@@ -62,5 +63,46 @@ async def write_data_to_influxdb_async(data: pd.DataFrame, client: InfluxDBClien
             .time(datetime.now(), WritePrecision.NS)
         write_api.write(bucket=bucket, record=point)
 
+def main():
+    app.run(debug=True)
+
+@app.route("/write_data", methods=["POST"])
+def write_data():
+    """
+    The write_data function writes data to InfluxDB.
+
+    Returns:
+        - The response
+    """
+    data = request.json
+    data = pd.DataFrame(data)
+    client = influx_db_setup(None, None, None)
+    write_data_to_influxdb(data, client, "test")
+    return jsonify({"message": "Data written successfully"})
+
+"""
+Get data from InfluxDB based on user name from the URL
+
+
+"""
+@app.route("/get_data/<username>", methods=["GET"])
+def get_data(username):
+    """
+    The get_data function gets data from InfluxDB.
+
+    Args:
+        - username: The username to get data for
+
+    Returns:
+        - The response
+    """
+    client = influx_db_setup(None, None, None)
+    query = f'from(bucket: "test") |> range(start: -1h) |> filter(fn: (r) => r._measurement == "angle" and r.sensor == "{username}")'
+    result = client.query_api().query(query)
+    data = []
+    for table in result:
+        for record in table.records:
+            data.append(record.values)
+    return jsonify(data)
 if __name__ == "__main__":
     main()
