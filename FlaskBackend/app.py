@@ -3,6 +3,7 @@ from influxdb_client.client.write_api import ASYNCHRONOUS, SYNCHRONOUS
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from flask import Flask, request, jsonify
 import pandas as pd
+import numpy as np
 from dotenv import load_dotenv
 import asyncio
 
@@ -102,6 +103,20 @@ def get_data(username):
         for record in table.records:
             data.append(record.values)
     return jsonify(data)
+
+@app.route("/test_fake_data", methods=["GET"])
+def test_fake_data():
+    """
+    The test_fake_data function returns fake data.
+
+    Returns:
+        - The response
+    """
+    df=pd.DataFrame(np.random.randint(0,90,size=(10, 2)), columns=['sensor', 'angle'])
+    # Send data out to API
+
+    data = df.to_dict(orient="records")
+    jsonify(data)
 
 def main():
     app.run(debug=True)
