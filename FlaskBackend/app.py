@@ -116,7 +116,8 @@ def test_fake_data():
     # Send data out to API
 
     data = df.to_dict(orient="records")
-    jsonify(data)
+    message = jsonify(data)
+    return message
 
 def main():
     app.run(debug=True)
