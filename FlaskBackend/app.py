@@ -66,8 +66,9 @@ def get_data(username):
 
     return jsonify({'username': username, 'data': data}), 200
 
+def main():
+    app.run(debug=True)
+
 if __name__ == '__main__':
     main()
 
-def main():
-    app.run(debug=True)
