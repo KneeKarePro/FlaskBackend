@@ -1,126 +1,73 @@
-import influxdb_client as influx 
-from influxdb_client.client.write_api import ASYNCHRONOUS, SYNCHRONOUS
-from influxdb_client import InfluxDBClient, Point, WritePrecision
 from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.sql import func
 import pandas as pd
 import numpy as np
 from dotenv import load_dotenv
 import asyncio
-
 from datetime import datetime
-import os
 
 app = Flask(__name__)
 
-def influx_db_setup(url: str | None, token: str | None, org: str | None) -> influx.InfluxDBClient:
-    """
-    The influx_db_setup function sets up the InfluxDB client.
+# Configure SQLite database
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///knee_data.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    Returns:
-        - The InfluxDB client
-    """
-    load_dotenv()
-    url = url if url is not None else os.getenv("INFLUXDB_URL")
-    # token = "b0D8NCvGSIupVSmCTwvZ7_JaQkM_ls-bcmcT72xojGNhftBIqDa5TLiIinrOvAVQNNyyaiu21ggbvN5CxRipFA==" # Linux Desktop
-    token = token if token is not None else os.getenv("INFLUXDB_TOKEN")
-    org = org if org is not None else os.getenv("INFLUXDB_ORG")
-    write_client: InfluxDBClient = InfluxDBClient(url=url, token=token, org=org)
+db = SQLAlchemy(app)
 
-    # Test connection
-    health: influx.HealthCheck = write_client.health()
-    assert health.status == "pass", f"Connection failed: {health.message}"
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), nullable=False, unique=True)
+    device_data = db.relationship('DeviceData', backref='user', lazy=True)
 
-    return write_client
+class DeviceData(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    angle = db.Column(db.Float, nullable=False)
+    rotation = db.Column(db.Float, nullable=False)
+    timestamp = db.Column(db.DateTime, default=func.now())
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-def write_data_to_influxdb(data: pd.DataFrame, client: InfluxDBClient, bucket: str) -> None:
-    """
-    The write_data_to_influxdb function writes data to InfluxDB.
+with app.app_context():
+    db.create_all()
 
-    Args:
-        - data: The data to write to InfluxDB
-        - client: The InfluxDB client
-    """
-    write_api = client.write_api(write_options=SYNCHRONOUS)
-    for index, row in data.iterrows():
-        point = Point("angle") \
-            .tag("sensor", row["sensor"]) \
-            .field("angle", row["angle"]) \
-            .time(datetime.now(), WritePrecision.NS)
-        write_api.write(bucket=bucket, record=point)
+@app.route('/data', methods=['POST'])
+def receive_data():
+    data = request.get_json()
+    username = data.get('username')
+    angle = data.get('angle')
+    rotation = data.get('rotation')
 
-async def write_data_to_influxdb_async(data: pd.DataFrame, client: InfluxDBClient, bucket: str) -> None:
-    """
-    The write_data_to_influxdb function writes data to InfluxDB asynchronously.
+    if not all([username, angle, rotation]):
+        return jsonify({'error': 'Missing data'}), 400
 
-    Args:
-        - data: The data to write to InfluxDB
-        - client: The InfluxDB client
-    """
-    write_api = client.write_api(write_options=ASYNCHRONOUS)
-    for index, row in data.iterrows():
-        point = Point("angle") \
-            .tag("sensor", row["sensor"]) \
-            .field("angle", row["angle"]) \
-            .time(datetime.now(), WritePrecision.NS)
-        write_api.write(bucket=bucket, record=point)
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        user = User(username=username)
+        db.session.add(user)
+        db.session.commit()
 
+    device_data = DeviceData(angle=angle, rotation=rotation, user=user)
+    db.session.add(device_data)
+    db.session.commit()
 
-@app.route("/write_data", methods=["POST"])
-def write_data():
-    """
-    The write_data function writes data to InfluxDB.
+    return jsonify({'message': 'Data received'}), 201
 
-    Returns:
-        - The response
-    """
-    data = request.json
-    data = pd.DataFrame(data)
-    client = influx_db_setup(None, None, None)
-    write_data_to_influxdb(data, client, "test")
-    return jsonify({"message": "Data written successfully"})
-
-"""
-Get data from InfluxDB based on user name from the URL
-
-
-"""
-@app.route("/get_data/<username>", methods=["GET"])
+@app.route('/data/<username>', methods=['GET'])
 def get_data(username):
-    """
-    The get_data function gets data from InfluxDB.
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
 
-    Args:
-        - username: The username to get data for
+    data = [{
+        'angle': d.angle,
+        'rotation': d.rotation,
+        'timestamp': d.timestamp.isoformat()
+    } for d in user.device_data]
 
-    Returns:
-        - The response
-    """
-    client = influx_db_setup(None, None, None)
-    query = f'from(bucket: "test") |> range(start: -1h) |> filter(fn: (r) => r._measurement == "angle" and r.sensor == "{username}")'
-    result = client.query_api().query(query)
-    data = []
-    for table in result:
-        for record in table.records:
-            data.append(record.values)
-    return jsonify(data)
+    return jsonify({'username': username, 'data': data}), 200
 
-@app.route("/test_fake_data", methods=["GET"])
-def test_fake_data():
-    """
-    The test_fake_data function returns fake data.
-
-    Returns:
-        - The response
-    """
-    df=pd.DataFrame(np.random.randint(0,90,size=(10, 2)), columns=['sensor', 'angle'])
-    # Send data out to API
-
-    data = df.to_dict(orient="records")
-    message = jsonify(data)
-    return message
+if __name__ == '__main__':
+    main()
 
 def main():
     app.run(debug=True)
-
-if __name__ == "__main__":
-    main()

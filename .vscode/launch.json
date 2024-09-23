@@ -5,12 +5,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python Debugger: Current File",
+      // Launch the current file but under the module path using the -m flag
+      "name": "Python: Current File",
       "type": "debugpy",
       "request": "launch",
       "program": "${file}",
       "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    }
+      "console": "integratedTerminal",
+    },
   ]
 }
