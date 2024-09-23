@@ -1,6 +1,10 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
+import pandas as pd
+import numpy as np
+from dotenv import load_dotenv
+import asyncio
 from datetime import datetime
 
 app = Flask(__name__)
@@ -63,4 +67,7 @@ def get_data(username):
     return jsonify({'username': username, 'data': data}), 200
 
 if __name__ == '__main__':
+    main()
+
+def main():
     app.run(debug=True)
