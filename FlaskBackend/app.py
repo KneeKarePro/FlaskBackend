@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 from sqlalchemy.sql import func
 import pandas as pd
 import numpy as np
@@ -8,6 +9,7 @@ import asyncio
 from datetime import datetime
 
 app = Flask(__name__)
+CORS(app, resources={r'/*': {'origins': '*'}})
 
 # Configure SQLite database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///knee_data.db'
