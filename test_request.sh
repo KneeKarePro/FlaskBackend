@@ -4,7 +4,7 @@
 
 # Variables
 CONTENT_TYPE="Content-Type: application/json"
-URL="http://localhost:5000"
+URL="http://127.0.01:5000"
 
 # Functions
 post() {
@@ -38,7 +38,7 @@ case "$1" in
         delete_user
         ;;
     *)
-        echo "Usage: $0 {post|get_all|get_stats}"
+        echo "Usage: $0 {post|get_all|get_stats|delete_user}"
         exit 1
         ;;
 esac
