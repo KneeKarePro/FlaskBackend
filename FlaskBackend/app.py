@@ -39,9 +39,6 @@ def receive_data():
     angle = data.get('angle')
     rotation = data.get('rotation')
 
-    if not all([username, angle, rotation]):
-        return jsonify({'error': 'Missing data'}), 400
-
     user = User.query.filter_by(username=username).first()
     if not user:
         user = User(username=username)
